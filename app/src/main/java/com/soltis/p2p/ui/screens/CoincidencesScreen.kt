@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -66,7 +66,7 @@ fun CoincidencesScreen(onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = TextPrimary)
                 }
                 Text(
                     text = "Coincidencias",
@@ -76,7 +76,7 @@ fun CoincidencesScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.width(48.dp))
             }
         }
 
@@ -173,7 +173,7 @@ fun CoincidencesScreen(onBack: () -> Unit) {
             // ── Disclaimer ────────────────────────────────────────────────────
             item {
                 P2PInfoBanner(
-                    text = "Las coincidencias se generan automáticamente y están sujetas a la confirmación de la operación."
+                    text = "Las coincidencias en Nexus Pay se generan automáticamente y están sujetas a la confirmación de la operación."
                 )
             }
         }

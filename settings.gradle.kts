@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "P2P"
+rootProject.name = "Nexus Pay"
 include(":app")

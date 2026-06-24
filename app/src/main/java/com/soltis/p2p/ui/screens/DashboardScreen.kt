@@ -47,13 +47,61 @@ data class RecentMovement(
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
+// ── State ─────────────────────────────────────────────────────────────────────
+
+object GlobalWalletState {
+    var penBalance by mutableStateOf(8240.50)
+    var penRetained by mutableStateOf(390.00)
+    
+    var usdBalance by mutableStateOf(2150.00)
+    var usdRetained by mutableStateOf(50.00)
+    
+    var eurBalance by mutableStateOf(66.28)
+    var eurRetained by mutableStateOf(6.00)
+
+    fun addDeposit(currency: String, amount: Double) {
+        when(currency) {
+            "PEN" -> penBalance += amount
+            "USD" -> usdBalance += amount
+            "EUR" -> eurBalance += amount
+        }
+    }
+
+    fun retainAmount(currency: String, amount: Double) {
+        when(currency) {
+            "PEN" -> {
+                penBalance -= amount
+                penRetained += amount
+            }
+            "USD" -> {
+                usdBalance -= amount
+                usdRetained += amount
+            }
+            "EUR" -> {
+                eurBalance -= amount
+                eurRetained += amount
+            }
+        }
+    }
+}
+
 @Composable
 fun DashboardScreen(
     onNavigateToDeposit: () -> Unit,
+    onNavigateToWithdraw: () -> Unit,
+    onNavigateToTransfer: () -> Unit,
     onNavigateToMovements: () -> Unit,
-    onNavigateToPublish: () -> Unit
+    onLogout: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(3) } // 3 = Wallet por defecto
+    var showCoincidences by remember { mutableStateOf(false) }
+
+    // Reset flow state when leaving the "Ofertas" tab to ensure fresh start on return
+    LaunchedEffect(selectedTab) {
+        if (selectedTab != 2) {
+            showCoincidences = false
+        }
+    }
 
     val tabs = listOf("Inicio", "Mercado", "Ofertas", "Wallet", "Perfil")
     val tabIcons = listOf(
@@ -75,10 +123,6 @@ fun DashboardScreen(
                         selected = selectedTab == index,
                         onClick = {
                             selectedTab = index
-                            when (index) {
-                                2 -> onNavigateToPublish()
-                                else -> {}
-                            }
                         },
                         icon = {
                             Icon(tabIcons[index], contentDescription = label)
@@ -96,33 +140,215 @@ fun DashboardScreen(
             }
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .background(Color(0xFFF7F7F7))
+                .background(Color(0xFFFFF8F1))
         ) {
-            // ── Dark header ───────────────────────────────────────────────────
-            WalletHeader(
-                onDeposit    = onNavigateToDeposit,
-                onWithdraw   = { /* TODO */ },
-                onTransfer   = { /* TODO */ },
-                onProfile    = { /* TODO */ }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // ── Currencies ────────────────────────────────────────────────────
-            CurrenciesSection()
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // ── Recent movements ──────────────────────────────────────────────
-            RecentMovementsSection(onVerTodos = onNavigateToMovements)
-
-            Spacer(modifier = Modifier.height(16.dp))
+            when (selectedTab) {
+                0 -> InicioTabContent(
+                    onNavigateToDeposit = onNavigateToDeposit,
+                    onNavigateToOfertas = { selectedTab = 2 }
+                )
+                1 -> MercadoTabContent()
+                2 -> {
+                    if (showCoincidences) {
+                        CoincidencesScreen(onBack = { showCoincidences = false })
+                    } else {
+                        PublishOfferScreen(
+                            onBack = { selectedTab = 0 },
+                            onPublished = { showCoincidences = true }
+                        )
+                    }
+                }
+                3 -> WalletTabContent(
+                    onNavigateToDeposit = onNavigateToDeposit,
+                    onNavigateToWithdraw = onNavigateToWithdraw,
+                    onNavigateToTransfer = onNavigateToTransfer,
+                    onNavigateToMovements = onNavigateToMovements
+                )
+                4 -> PerfilTabContent(onLogout)
+            }
         }
+    }
+}
+
+@Composable
+fun InicioTabContent(
+    onNavigateToDeposit: () -> Unit,
+    onNavigateToOfertas: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Cabecera de bienvenida
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkBg, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                .padding(horizontal = 20.dp, vertical = 32.dp)
+        ) {
+            Column {
+                Text("¡Hola, Juan!", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text("Bienvenido de nuevo a Nexus Pay", color = Color(0xFFAAAAAA), fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(20.dp))
+                Surface(
+                    color = DarkSurface,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Saldo total disponible (est.)", color = Color(0xFFAAAAAA), fontSize = 12.sp)
+                        val totalEstimatedPen = GlobalWalletState.penBalance + (GlobalWalletState.usdBalance * 3.75) + (GlobalWalletState.eurBalance * 4.05)
+                        Text("S/ ${"%,.2f".format(totalEstimatedPen)}", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Acciones rápidas", modifier = Modifier.padding(horizontal = 20.dp), fontWeight = FontWeight.Bold, color = TextPrimary)
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionItem("Comprar", Icons.Default.AddChart, YellowPrimary, Modifier.weight(1f)) {
+                onNavigateToOfertas()
+            }
+            QuickActionItem("Vender", Icons.Default.HistoryEdu, OrangeRetained, Modifier.weight(1f)) {
+                onNavigateToOfertas()
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(20.dp))
+        Text("Mercado en tiempo real", modifier = Modifier.padding(horizontal = 20.dp), fontWeight = FontWeight.Bold, color = TextPrimary)
+        Spacer(modifier = Modifier.height(12.dp))
+        CurrenciesSection()
+    }
+}
+
+@Composable
+fun QuickActionItem(label: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.height(80.dp).clickable { onClick() },
+        shadowElevation = 1.dp
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = color)
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+        }
+    }
+}
+
+@Composable
+fun MercadoTabContent() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkBg, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                .padding(horizontal = 20.dp, vertical = 32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Tipos de Cambio", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text("En vivo desde Nexus Pay", color = Color(0xFFAAAAAA), fontSize = 14.sp)
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Pares de divisas en Nexus Pay", modifier = Modifier.padding(horizontal = 20.dp), fontWeight = FontWeight.Bold, color = TextPrimary)
+        Spacer(modifier = Modifier.height(12.dp))
+        CurrenciesSection()
+    }
+}
+
+@Composable
+fun PerfilTabContent(onLogout: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(40.dp))
+        Box(modifier = Modifier.size(100.dp).background(YellowPrimary, CircleShape), contentAlignment = Alignment.Center) {
+            Text("JM", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Juan Martínez", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text("juan.martinez@email.com", fontSize = 14.sp, color = TextSecondary)
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+            ProfileOptionItem("Mi Cuenta", Icons.Default.Person)
+            ProfileOptionItem("Seguridad", Icons.Default.Security)
+            ProfileOptionItem("Notificaciones", Icons.Default.Notifications)
+            ProfileOptionItem("Ayuda y Soporte", Icons.Default.Help)
+            Spacer(modifier = Modifier.height(20.dp))
+            ProfileOptionItem("Cerrar Sesión", Icons.Default.ExitToApp, isDestructive = true, onClick = onLogout)
+        }
+    }
+}
+
+@Composable
+fun ProfileOptionItem(label: String, icon: ImageVector, isDestructive: Boolean = false, onClick: () -> Unit = {}) {
+    val color = if (isDestructive) RedNegative else TextPrimary
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(label, fontSize = 16.sp, color = color, modifier = Modifier.weight(1f))
+        if (!isDestructive) Icon(Icons.Default.ChevronRight, null, tint = TextHint)
+    }
+    HorizontalDivider(color = Color(0xFFF0F0F0))
+}
+
+@Composable
+fun WalletTabContent(
+    onNavigateToDeposit: () -> Unit,
+    onNavigateToWithdraw: () -> Unit,
+    onNavigateToTransfer: () -> Unit,
+    onNavigateToMovements: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        // ── Dark header ───────────────────────────────────────────────────
+        WalletHeader(
+            onDeposit    = onNavigateToDeposit,
+            onWithdraw   = onNavigateToWithdraw,
+            onTransfer   = onNavigateToTransfer,
+            onProfile    = { /* TODO */ }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // ── Currencies ────────────────────────────────────────────────────
+        CurrenciesSection()
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // ── Recent movements ──────────────────────────────────────────────
+        RecentMovementsSection(onVerTodos = onNavigateToMovements)
+
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
@@ -172,21 +398,7 @@ fun WalletHeader(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
 
-                // Language pill
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = DarkSurface,
-                    modifier = Modifier.clickable { }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("🌐 ES", fontSize = 12.sp, color = Color.White)
-                        Icon(Icons.Default.KeyboardArrowDown, null,
-                            modifier = Modifier.size(14.dp), tint = Color.White)
-                    }
-                }
+                Spacer(modifier = Modifier.width(40.dp))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -203,14 +415,16 @@ fun WalletHeader(
                         color = Color(0xFFAAAAAA)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    val totalEstimatedPen = GlobalWalletState.penBalance + (GlobalWalletState.usdBalance * 3.75) + (GlobalWalletState.eurBalance * 4.05)
+                    val totalEstimatedUsd = totalEstimatedPen / 3.75
                     Text(
-                        text = "S/ 12,456.78",
+                        text = "S/ ${"%,.2f".format(totalEstimatedPen)}",
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "≈ \$3,201.06 USD",
+                        text = "≈ $ ${"%,.2f".format(totalEstimatedUsd)} USD",
                         fontSize = 13.sp,
                         color = Color(0xFFAAAAAA)
                     )
@@ -267,9 +481,9 @@ fun ActionButton(label: String, icon: ImageVector, onClick: () -> Unit) {
 @Composable
 fun CurrenciesSection() {
     val currencies = listOf(
-        CurrencyBalance("🇵🇪", "PEN", "Sol peruano",          "S/ 8,240.50", "S/ 390.00",  "S/ 7,850.50", "S/ 390.00"),
-        CurrencyBalance("🇺🇸", "USD", "Dólar estadounidense", "$ 2,150.00",  "$ 50.00",    "$ 2,100.00",  "$ 50.00"),
-        CurrencyBalance("🇪🇺", "EUR", "Euro",                 "€ 66.28",     "€ 6.00",     "€ 60.28",     "€ 6.00")
+        CurrencyBalance("🇵🇪", "PEN", "Sol peruano",          "S/ ${"%,.2f".format(GlobalWalletState.penBalance)}", "S/ ${"%,.2f".format(GlobalWalletState.penRetained)}",  "3.72", "3.78"),
+        CurrencyBalance("🇺🇸", "USD", "Dólar estadounidense", "$ ${"%,.2f".format(GlobalWalletState.usdBalance)}",  "$ ${"%,.2f".format(GlobalWalletState.usdRetained)}",    "1.00", "1.02"),
+        CurrencyBalance("🇪🇺", "EUR", "Euro",                 "€ ${"%,.2f".format(GlobalWalletState.eurBalance)}",     "€ ${"%,.2f".format(GlobalWalletState.eurRetained)}",     "1.08", "1.10")
     )
 
     Surface(

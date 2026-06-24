@@ -6,7 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
@@ -46,17 +45,13 @@ fun LoginScreen(
             .padding(bottom = 32.dp)
     ) {
 
-        // ── Top bar: back + language ──────────────────────────────────────────
+        // ── Top bar: language ──────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onNavigateToRegister) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
-            }
-
             Spacer(modifier = Modifier.weight(1f))
 
             // Language pill

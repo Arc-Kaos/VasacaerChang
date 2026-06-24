@@ -10,28 +10,47 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.soltis.p2p.ui.screens.*
-import com.soltis.p2p.ui.theme.P2PDivisasTheme
+import com.soltis.p2p.ui.screens.InitialBrandingScreen
+import com.soltis.p2p.ui.screens.LoginScreen
+import com.soltis.p2p.ui.screens.RegisterScreen
+import com.soltis.p2p.ui.screens.DashboardScreen
+import com.soltis.p2p.ui.screens.DepositScreen
+import com.soltis.p2p.ui.screens.WithdrawScreen
+import com.soltis.p2p.ui.screens.TransferScreen
+import com.soltis.p2p.ui.screens.MovementsScreen
+import com.soltis.p2p.ui.theme.NexusPayTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 object Routes {
-    const val LOGIN        = "login"
-    const val REGISTER     = "register"
-    const val DASHBOARD    = "dashboard"
-    const val DEPOSIT      = "deposit"
-    const val MOVEMENTS    = "movements"
-    const val PUBLISH      = "publish_offer"
-    const val COINCIDENCES = "coincidences"
+    const val SPLASH      = "splash"
+    const val LOGIN       = "login"
+    const val REGISTER    = "register"
+    const val DASHBOARD   = "dashboard"
+    const val DEPOSIT     = "deposit"
+    const val WITHDRAW    = "withdraw"
+    const val TRANSFER    = "transfer"
+    const val MOVEMENTS   = "movements"
 }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Instalamos la API pero no la dejamos mostrar nada
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            P2PDivisasTheme {
+            NexusPayTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = Routes.LOGIN) {
+                    NavHost(navController = navController, startDestination = Routes.SPLASH) {
+                        composable(Routes.SPLASH) {
+                            InitialBrandingScreen(onTimeout = {
+                                navController.navigate(Routes.LOGIN) {
+                                    popUpTo(Routes.SPLASH) { inclusive = true }
+                                }
+                            })
+                        }
                         composable(Routes.LOGIN) {
                             LoginScreen(
                                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
@@ -55,24 +74,27 @@ class MainActivity : ComponentActivity() {
                         composable(Routes.DASHBOARD) {
                             DashboardScreen(
                                 onNavigateToDeposit   = { navController.navigate(Routes.DEPOSIT) },
+                                onNavigateToWithdraw  = { navController.navigate(Routes.WITHDRAW) },
+                                onNavigateToTransfer  = { navController.navigate(Routes.TRANSFER) },
                                 onNavigateToMovements = { navController.navigate(Routes.MOVEMENTS) },
-                                onNavigateToPublish   = { navController.navigate(Routes.PUBLISH) }
+                                onLogout = {
+                                    navController.navigate(Routes.LOGIN) {
+                                        popUpTo(Routes.DASHBOARD) { inclusive = true }
+                                    }
+                                }
                             )
                         }
                         composable(Routes.DEPOSIT) {
                             DepositScreen(onBack = { navController.popBackStack() })
                         }
+                        composable(Routes.WITHDRAW) {
+                            WithdrawScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable(Routes.TRANSFER) {
+                            TransferScreen(onBack = { navController.popBackStack() })
+                        }
                         composable(Routes.MOVEMENTS) {
                             MovementsScreen(onBack = { navController.popBackStack() })
-                        }
-                        composable(Routes.PUBLISH) {
-                            PublishOfferScreen(
-                                onBack      = { navController.popBackStack() },
-                                onPublished = { navController.navigate(Routes.COINCIDENCES) }
-                            )
-                        }
-                        composable(Routes.COINCIDENCES) {
-                            CoincidencesScreen(onBack = { navController.popBackStack() })
                         }
                     }
                 }

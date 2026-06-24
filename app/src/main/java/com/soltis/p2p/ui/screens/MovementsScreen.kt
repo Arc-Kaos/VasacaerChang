@@ -46,12 +46,12 @@ fun MovementsScreen(onBack: () -> Unit) {
 
     val allMovements = listOf(
         MovementDetail(Icons.Default.Add,          GreenPositive,  "Recarga",               "Depósito bancario · BBVA",       "20 may 2025, 10:35 a. m.", "+ S/ 500.00",  "PEN", true,  "recarga"),
-        MovementDetail(Icons.Default.Lock,         OrangeRetained, "Retención",             "Operación #P2P-84521",           "20 may 2025, 10:18 a. m.", "- S/ 320.00",  "PEN", false, "retencion"),
-        MovementDetail(Icons.Default.LockOpen,     GreenPositive,  "Liberación",            "Operación #P2P-84521",           "20 may 2025, 10:42 a. m.", "+ S/ 320.00",  "PEN", true,  "liberacion"),
-        MovementDetail(Icons.Default.SwapHoriz,    RedNegative,    "Pago con wallet",       "Operación #P2P-95322",           "19 may 2025, 6:30 p. m.", "- USD 45.00",  "USD", false, "pago"),
-        MovementDetail(Icons.Default.ArrowDownward,GreenPositive,  "Devolución",            "Operación #P2P-34523",           "18 may 2025, 1:20 p. m.", "+ EUR 60.00",  "EUR", true,  "devolucion"),
-        MovementDetail(Icons.Default.Lock,         OrangeRetained, "Retención",             "Operación #P2P-84824",           "18 may 2025, 11:06 a. m.", "- S/ 150.00", "PEN", false, "retencion"),
-        MovementDetail(Icons.Default.LockOpen,     GreenPositive,  "Liberación",            "Operación #P2P-56923",           "17 may 2025, 2:50 p. m.", "+ S/ 280.00",  "PEN", true,  "liberacion")
+        MovementDetail(Icons.Default.Lock,         OrangeRetained, "Retención",             "Operación #NX-84521",           "20 may 2025, 10:18 a. m.", "- S/ 320.00",  "PEN", false, "retencion"),
+        MovementDetail(Icons.Default.LockOpen,     GreenPositive,  "Liberación",            "Operación #NX-84521",           "20 may 2025, 10:42 a. m.", "+ S/ 320.00",  "PEN", true,  "liberacion"),
+        MovementDetail(Icons.Default.SwapHoriz,    RedNegative,    "Pago con Nexus Pay",    "Operación #NX-95322",           "19 may 2025, 6:30 p. m.", "- USD 45.00",  "USD", false, "pago"),
+        MovementDetail(Icons.Default.ArrowDownward,GreenPositive,  "Devolución",            "Operación #NX-34523",           "18 may 2025, 1:20 p. m.", "+ EUR 60.00",  "EUR", true,  "devolucion"),
+        MovementDetail(Icons.Default.Lock,         OrangeRetained, "Retención",             "Operación #NX-84824",           "18 may 2025, 11:06 a. m.", "- S/ 150.00", "PEN", false, "retencion"),
+        MovementDetail(Icons.Default.LockOpen,     GreenPositive,  "Liberación",            "Operación #NX-56923",           "17 may 2025, 2:50 p. m.", "+ S/ 280.00",  "PEN", true,  "liberacion")
     )
 
     val filtered = allMovements.filter { mov ->
@@ -72,9 +72,7 @@ fun MovementsScreen(onBack: () -> Unit) {
                         .padding(top = 52.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
-                    }
+                    Spacer(modifier = Modifier.width(48.dp))
                     Text(
                         text = "Movimientos",
                         fontSize = 18.sp,

@@ -57,15 +57,8 @@ fun RegisterScreen(
             .padding(horizontal = 24.dp)
             .padding(bottom = 32.dp)
     ) {
-        // ── Back button ──────────────────────────────────────────────────────
-        IconButton(
-            onClick = onNavigateToLogin,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
-        }
-
         // ── Logo ─────────────────────────────────────────────────────────────
+        Spacer(modifier = Modifier.height(32.dp))
         P2PTopLogo(modifier = Modifier.align(Alignment.CenterHorizontally))
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -82,7 +75,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "Únete a nuestra plataforma P2P y accede\na la mejor experiencia de compra y venta de divisas.",
+            text = "Únete a Nexus Pay y accede\na la mejor experiencia de compra y venta de divisas.",
             fontSize = 13.sp,
             color = TextSecondary,
             lineHeight = 18.sp,

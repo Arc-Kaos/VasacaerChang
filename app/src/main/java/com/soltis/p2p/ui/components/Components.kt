@@ -1,5 +1,6 @@
 package com.soltis.p2p.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -10,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.soltis.p2p.R
 import com.soltis.p2p.ui.theme.*
 
 // ── Reusable TextField ────────────────────────────────────────────────────────
@@ -101,19 +104,16 @@ fun P2PTopLogo(modifier: Modifier = Modifier) {
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Reemplaza con Image(painterResource(R.drawable.ic_p2p_logo), ...) cuando tengas el asset
-        Box(
+        Image(
+            painter = painterResource(id = R.drawable.app_logo),
+            contentDescription = "Nexus Pay Logo",
             modifier = Modifier
                 .size(44.dp)
-                .background(YellowPrimary, RoundedCornerShape(10.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("P2", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        }
+        )
         Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text("P2P", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
-            Text("DIVISAS", fontSize = 9.sp, color = TextPrimary, letterSpacing = 1.5.sp)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Nexus", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+            Text("Pay", fontWeight = FontWeight.Bold, fontSize = 9.sp, color = TextPrimary, letterSpacing = 1.5.sp)
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,12 +22,26 @@ import androidx.compose.ui.unit.sp
 import com.soltis.p2p.ui.components.*
 import com.soltis.p2p.ui.theme.*
 
+data class CurrencyInfo(val code: String, val flag: String, val name: String, val symbol: String)
+
+val availableCurrencies = listOf(
+    CurrencyInfo("USD", "🇺🇸", "Dólar estadounidense", "$"),
+    CurrencyInfo("PEN", "🇵🇪", "Sol peruano", "S/"),
+    CurrencyInfo("EUR", "🇪🇺", "Euro", "€")
+)
+
 @Composable
 fun PublishOfferScreen(
     onBack: () -> Unit,
     onPublished: () -> Unit
 ) {
     var isBuyMode          by remember { mutableStateOf(true) }
+    var fromCurrency       by remember { mutableStateOf(availableCurrencies[0]) } // USD
+    var toCurrency         by remember { mutableStateOf(availableCurrencies[1]) } // PEN
+    
+    var showFromSelector   by remember { mutableStateOf(false) }
+    var showToSelector     by remember { mutableStateOf(false) }
+
     var monto              by remember { mutableStateOf("") }
     var tipoCambio         by remember { mutableStateOf("") }
     var limiteMin          by remember { mutableStateOf("") }
@@ -37,7 +52,6 @@ fun PublishOfferScreen(
     val selectedMethods    = remember { mutableStateListOf("Yape") }
 
     val paymentMethods = listOf("Yape", "Plin", "Transferencia bancaria", "Wallet interno")
-    val userBalance    = mapOf("PEN" to 1345.78, "USD" to 2150.00)
 
     Column(
         modifier = Modifier
@@ -54,7 +68,7 @@ fun PublishOfferScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = TextPrimary)
             }
             Text(
                 text = "Publicar oferta",
@@ -64,19 +78,7 @@ fun PublishOfferScreen(
                 modifier = Modifier.weight(1f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-            // Language pill
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                border = ButtonDefaults.outlinedButtonBorder
-            ) {
-                Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("🌐 ES", fontSize = 12.sp, color = TextPrimary)
-                    Icon(Icons.Default.KeyboardArrowDown, null,
-                        modifier = Modifier.size(14.dp), tint = TextPrimary)
-                }
-            }
+            Spacer(modifier = Modifier.width(48.dp))
         }
 
         // ── Logo ──────────────────────────────────────────────────────────────
@@ -132,15 +134,45 @@ fun PublishOfferScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // From
-            CurrencySelector(flag = "🇺🇸", code = "USD", name = "Dólares",
-                modifier = Modifier.weight(1f))
+            CurrencySelector(
+                flag = fromCurrency.flag,
+                code = fromCurrency.code,
+                name = fromCurrency.name,
+                modifier = Modifier.weight(1f),
+                onClick = { showFromSelector = true }
+            )
 
             Icon(Icons.Default.SwapHoriz, contentDescription = null,
-                tint = YellowPrimary, modifier = Modifier.size(28.dp))
+                tint = YellowPrimary, modifier = Modifier.size(28.dp).clickable {
+                    val temp = fromCurrency
+                    fromCurrency = toCurrency
+                    toCurrency = temp
+                })
 
             // To
-            CurrencySelector(flag = "🇵🇪", code = "PEN", name = "Soles",
-                modifier = Modifier.weight(1f))
+            CurrencySelector(
+                flag = toCurrency.flag,
+                code = toCurrency.code,
+                name = toCurrency.name,
+                modifier = Modifier.weight(1f),
+                onClick = { showToSelector = true }
+            )
+        }
+
+        if (showFromSelector) {
+            CurrencyPickerDialog(
+                currencies = availableCurrencies.filter { it.code != toCurrency.code },
+                onDismiss = { showFromSelector = false },
+                onSelect = { fromCurrency = it; showFromSelector = false }
+            )
+        }
+
+        if (showToSelector) {
+            CurrencyPickerDialog(
+                currencies = availableCurrencies.filter { it.code != fromCurrency.code },
+                onDismiss = { showToSelector = false },
+                onSelect = { toCurrency = it; showToSelector = false }
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -151,7 +183,7 @@ fun PublishOfferScreen(
             value = monto,
             onValueChange = { monto = it; errorMonto = "" },
             hint = "Ingresa el monto",
-            leadingIcon = { Text("S/", fontWeight = FontWeight.Bold, color = TextPrimary,
+            leadingIcon = { Text(fromCurrency.symbol, fontWeight = FontWeight.Bold, color = TextPrimary,
                 modifier = Modifier.padding(start = 4.dp)) },
             error = errorMonto,
             keyboardType = KeyboardType.Decimal,
@@ -159,7 +191,7 @@ fun PublishOfferScreen(
         )
 
         Text(
-            text = "Monto mínimo: S/ 10.00 · Máximo: S/ 90,000.00",
+            text = "Monto mínimo: ${fromCurrency.symbol} 10.00 · Máximo: ${fromCurrency.symbol} 90,000.00",
             fontSize = 10.sp, color = Color(0xFFAAAAAA),
             modifier = Modifier.padding(start = 20.dp, top = 3.dp)
         )
@@ -171,8 +203,8 @@ fun PublishOfferScreen(
             label = "Tipo de cambio",
             value = tipoCambio,
             onValueChange = { tipoCambio = it; errorTipo = "" },
-            hint = "Ingresa el tipo de cambio",
-            leadingIcon = { Text("S/", fontWeight = FontWeight.Bold, color = TextPrimary,
+            hint = "Precio por 1 ${fromCurrency.code}",
+            leadingIcon = { Text(toCurrency.symbol, fontWeight = FontWeight.Bold, color = TextPrimary,
                 modifier = Modifier.padding(start = 4.dp)) },
             error = errorTipo,
             keyboardType = KeyboardType.Decimal,
@@ -197,7 +229,7 @@ fun PublishOfferScreen(
                 value = limiteMin,
                 onValueChange = { limiteMin = it },
                 placeholder = { Text("Mínimo", color = TextHint, fontSize = 13.sp) },
-                prefix = { Text("S/ ", color = TextPrimary, fontWeight = FontWeight.Bold) },
+                prefix = { Text("${toCurrency.symbol} ", color = TextPrimary, fontWeight = FontWeight.Bold) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -210,7 +242,7 @@ fun PublishOfferScreen(
                 value = limiteMax,
                 onValueChange = { limiteMax = it },
                 placeholder = { Text("Máximo", color = TextHint, fontSize = 13.sp) },
-                prefix = { Text("S/ ", color = TextPrimary, fontWeight = FontWeight.Bold) },
+                prefix = { Text("${toCurrency.symbol} ", color = TextPrimary, fontWeight = FontWeight.Bold) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -288,9 +320,12 @@ fun PublishOfferScreen(
                 focusedBorderColor = YellowPrimary,
                 unfocusedBorderColor = StrokeDefault
             ),
-            supportingText = { Text("${terminos.length}/250", color = TextHint, fontSize = 11.sp,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.End) },
+            supportingText = { 
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Máximo 250 caracteres", color = TextHint, fontSize = 11.sp)
+                    Text("${terminos.length}/250", color = TextHint, fontSize = 11.sp)
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -299,11 +334,16 @@ fun PublishOfferScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // ── Info banner ───────────────────────────────────────────────────────
-        val bal = if (isBuyMode) userBalance["PEN"] else userBalance["USD"]
-        val sym = if (isBuyMode) "S/" else "$"
+        val bal = when(fromCurrency.code) {
+            "PEN" -> GlobalWalletState.penBalance
+            "USD" -> GlobalWalletState.usdBalance
+            "EUR" -> GlobalWalletState.eurBalance
+            else -> 0.0
+        }
+        val sym = fromCurrency.symbol
         P2PInfoBanner(
-            text = "Solo si lo posees: $sym ${"%.2f".format(bal ?: 0.0)}\n" +
-                   "Ese es el saldo que podrás usar para completar ${if (isBuyMode) "compras" else "ventas"}",
+            text = "Solo si lo posees: $sym ${"%.2f".format(bal)}\n" +
+                   "Ese es el saldo que podrás usar para completar la ${if (isBuyMode) "compra" else "venta"}",
             modifier = Modifier.padding(horizontal = 20.dp)
         )
 
@@ -316,24 +356,87 @@ fun PublishOfferScreen(
         ) {
             var valid = true
             val montoVal = monto.toDoubleOrNull()
-            if (montoVal == null || montoVal < 10) { errorMonto = "Mínimo S/ 10.00"; valid = false }
-            if (montoVal != null && montoVal > 90000) { errorMonto = "Máximo S/ 90,000.00"; valid = false }
+            if (montoVal == null || montoVal < 10) { errorMonto = "Mínimo ${fromCurrency.symbol} 10.00"; valid = false }
+            if (montoVal != null && montoVal > 90000) { errorMonto = "Máximo ${fromCurrency.symbol} 90,000.00"; valid = false }
             val tipoVal = tipoCambio.toDoubleOrNull()
             if (tipoVal == null || tipoVal <= 0) { errorTipo = "Tipo de cambio inválido"; valid = false }
             if (selectedMethods.isEmpty()) { valid = false }
-            if (valid) onPublished()
+            
+            // Check if user has enough balance to retain
+            if (valid && montoVal != null) {
+                val currentBal = when(fromCurrency.code) {
+                    "PEN" -> GlobalWalletState.penBalance
+                    "USD" -> GlobalWalletState.usdBalance
+                    "EUR" -> GlobalWalletState.eurBalance
+                    else -> 0.0
+                }
+                if (montoVal > currentBal) {
+                    errorMonto = "Saldo insuficiente"
+                    valid = false
+                }
+            }
+
+            if (valid && montoVal != null) {
+                GlobalWalletState.retainAmount(fromCurrency.code, montoVal)
+                onPublished()
+            }
         }
     }
 }
 
 @Composable
-fun CurrencySelector(flag: String, code: String, name: String, modifier: Modifier = Modifier) {
+fun CurrencyPickerDialog(
+    currencies: List<CurrencyInfo>,
+    onDismiss: () -> Unit,
+    onSelect: (CurrencyInfo) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar", color = YellowPrimary) }
+        },
+        title = { Text("Seleccionar divisa", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                currencies.forEach { currency ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(currency) }
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(currency.flag, fontSize = 24.sp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(currency.code, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+                            Text(currency.name, fontSize = 12.sp, color = TextSecondary)
+                        }
+                    }
+                    HorizontalDivider(color = Color(0xFFF5F5F5))
+                }
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp)
+    )
+}
+
+@Composable
+fun CurrencySelector(
+    flag: String,
+    code: String,
+    name: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Row(
         modifier = modifier
             .height(52.dp)
             .background(Color.White, RoundedCornerShape(10.dp))
             .border(1.dp, StrokeDefault, RoundedCornerShape(10.dp))
-            .clickable { }
+            .clickable { onClick() }
             .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

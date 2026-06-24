@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,16 +20,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.soltis.p2p.ui.components.P2PButton
-import com.soltis.p2p.ui.components.P2PInfoBanner
+import com.soltis.p2p.ui.components.P2PTextField
 import com.soltis.p2p.ui.components.P2PTopLogo
 import com.soltis.p2p.ui.theme.*
 
 @Composable
-fun DepositScreen(onBack: () -> Unit) {
+fun TransferScreen(onBack: () -> Unit) {
 
     var selectedCurrency by remember { mutableStateOf("PEN") }
     var monto            by remember { mutableStateOf("") }
+    var destinatario     by remember { mutableStateOf("") }
     var errorMonto       by remember { mutableStateOf("") }
+    var errorDestino     by remember { mutableStateOf("") }
 
     val currencies = listOf(
         Triple("PEN", "Soles",   "🇵🇪"),
@@ -44,8 +47,6 @@ fun DepositScreen(onBack: () -> Unit) {
         "EUR" -> GlobalWalletState.eurBalance
         else -> 0.0
     }
-    val montoDouble = monto.toDoubleOrNull() ?: 0.0
-    val saldoFinal  = balance + montoDouble
 
     Column(
         modifier = Modifier
@@ -53,10 +54,8 @@ fun DepositScreen(onBack: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp)
     ) {
-        // ── Top bar ───────────────────────────────────────────────────────────
         Spacer(modifier = Modifier.height(52.dp))
 
-        // ── Logo ──────────────────────────────────────────────────────────────
         P2PTopLogo(modifier = Modifier
             .align(Alignment.CenterHorizontally)
             .padding(top = 4.dp))
@@ -64,14 +63,14 @@ fun DepositScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Depositar saldo",
+            text = "Transferir",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Text(
-            text = "Recarga tu wallet virtual",
+            text = "Envía saldo a otros usuarios de Nexus Pay",
             fontSize = 13.sp,
             color = TextSecondary,
             modifier = Modifier
@@ -80,6 +79,22 @@ fun DepositScreen(onBack: () -> Unit) {
         )
 
         Spacer(modifier = Modifier.height(28.dp))
+
+        // ── Destinatario ──────────────────────────────────────────────────────
+        P2PTextField(
+            label = "Usuario destinatario",
+            value = destinatario,
+            onValueChange = {
+                destinatario = it
+                errorDestino = ""
+            },
+            hint = "@usuario o correo electrónico",
+            leadingIcon = { Icon(Icons.Default.Person, null, tint = TextSecondary) },
+            error = errorDestino,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // ── Moneda ────────────────────────────────────────────────────────────
         Text(
@@ -131,7 +146,7 @@ fun DepositScreen(onBack: () -> Unit) {
 
         // ── Monto ─────────────────────────────────────────────────────────────
         Text(
-            text = "Monto",
+            text = "Monto a enviar",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary,
@@ -146,13 +161,17 @@ fun DepositScreen(onBack: () -> Unit) {
                 monto = it
                 errorMonto = ""
             },
-            placeholder = { Text("Ingresa el monto", color = TextHint) },
+            placeholder = { Text("0.00", color = TextHint) },
             prefix = { Text("$symbol ", fontWeight = FontWeight.Bold, color = TextPrimary) },
-            suffix = { Text("0.00 ${selectedCurrency}", color = TextHint, fontSize = 12.sp) },
+            suffix = {
+                Text(
+                    text = "Saldo: $symbol ${"%.2f".format(balance)}",
+                    color = TextSecondary,
+                    fontSize = 11.sp
+                )
+            },
             isError = errorMonto.isNotEmpty(),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = KeyboardType.Decimal
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             shape = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -174,65 +193,19 @@ fun DepositScreen(onBack: () -> Unit) {
             )
         }
 
-        Text(
-            text = "Monto mínimo: ${symbol} 10.00 · Máximo: ${symbol} 30,000.00",
-            fontSize = 10.sp,
-            color = Color(0xFFAAAAAA),
-            modifier = Modifier.padding(start = 20.dp, top = 4.dp)
-        )
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ── Info banner ───────────────────────────────────────────────────────
-        P2PInfoBanner(
-            text = "Recarga simulada para fines del proyecto.\nEsta operación no implica dinero real.",
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ── Resumen ───────────────────────────────────────────────────────────
-        Text(
-            text = "Resumen",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextPrimary,
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color(0xFFFAFAFA),
-            border = ButtonDefaults.outlinedButtonBorder,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                ResumenRow(label = "Moneda", value = "$selectedCurrency (${currencies.first { it.first == selectedCurrency }.second})")
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF0F0F0))
-                ResumenRow(label = "Monto a recargar", value = "$symbol ${"%.2f".format(montoDouble)}")
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF0F0F0))
-                ResumenRow(label = "Saldo disponible después ⓘ", value = "$symbol ${"%.2f".format(saldoFinal)}")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // ── Confirmar ─────────────────────────────────────────────────────────
         P2PButton(
-            text = "Confirmar recarga",
+            text = "Enviar transferencia",
             modifier = Modifier.padding(horizontal = 20.dp)
         ) {
             val amount = monto.toDoubleOrNull()
             when {
+                destinatario.isBlank()        -> errorDestino = "Ingresa un destinatario"
                 amount == null || amount <= 0 -> errorMonto = "Ingresa un monto válido"
-                amount < 10                   -> errorMonto = "Mínimo $symbol 10.00"
-                amount > 30000                -> errorMonto = "Máximo $symbol 30,000.00"
+                amount > balance              -> errorMonto = "Saldo insuficiente"
                 else -> {
-                    GlobalWalletState.addDeposit(selectedCurrency, amount)
+                    GlobalWalletState.addDeposit(selectedCurrency, -amount)
                     onBack()
                 }
             }
@@ -241,23 +214,12 @@ fun DepositScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = "Cancelar",
+            text = "Volver",
             fontSize = 14.sp,
             color = TextSecondary,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .clickable { onBack() }
         )
-    }
-}
-
-@Composable
-fun ResumenRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, fontSize = 14.sp, color = Color(0xFF444444), modifier = Modifier.weight(1f))
-        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
     }
 }

@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +22,7 @@ import com.soltis.p2p.ui.components.P2PTopLogo
 import com.soltis.p2p.ui.theme.*
 
 @Composable
-fun DepositScreen(onBack: () -> Unit) {
+fun WithdrawScreen(onBack: () -> Unit) {
 
     var selectedCurrency by remember { mutableStateOf("PEN") }
     var monto            by remember { mutableStateOf("") }
@@ -45,7 +43,7 @@ fun DepositScreen(onBack: () -> Unit) {
         else -> 0.0
     }
     val montoDouble = monto.toDoubleOrNull() ?: 0.0
-    val saldoFinal  = balance + montoDouble
+    val saldoFinal  = balance - montoDouble
 
     Column(
         modifier = Modifier
@@ -64,14 +62,14 @@ fun DepositScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Depositar saldo",
+            text = "Retirar saldo",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Text(
-            text = "Recarga tu wallet virtual",
+            text = "Envía tus fondos a una cuenta externa",
             fontSize = 13.sp,
             color = TextSecondary,
             modifier = Modifier
@@ -131,7 +129,7 @@ fun DepositScreen(onBack: () -> Unit) {
 
         // ── Monto ─────────────────────────────────────────────────────────────
         Text(
-            text = "Monto",
+            text = "Monto a retirar",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary,
@@ -148,7 +146,14 @@ fun DepositScreen(onBack: () -> Unit) {
             },
             placeholder = { Text("Ingresa el monto", color = TextHint) },
             prefix = { Text("$symbol ", fontWeight = FontWeight.Bold, color = TextPrimary) },
-            suffix = { Text("0.00 ${selectedCurrency}", color = TextHint, fontSize = 12.sp) },
+            suffix = {
+                Text(
+                    text = "Disponible: $symbol ${"%.2f".format(balance)}",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    modifier = Modifier.clickable { monto = "%.2f".format(balance) }
+                )
+            },
             isError = errorMonto.isNotEmpty(),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = KeyboardType.Decimal
@@ -174,18 +179,11 @@ fun DepositScreen(onBack: () -> Unit) {
             )
         }
 
-        Text(
-            text = "Monto mínimo: ${symbol} 10.00 · Máximo: ${symbol} 30,000.00",
-            fontSize = 10.sp,
-            color = Color(0xFFAAAAAA),
-            modifier = Modifier.padding(start = 20.dp, top = 4.dp)
-        )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         // ── Info banner ───────────────────────────────────────────────────────
         P2PInfoBanner(
-            text = "Recarga simulada para fines del proyecto.\nEsta operación no implica dinero real.",
+            text = "El retiro se procesará en un plazo de 2 a 24 horas hábiles a tu cuenta vinculada.",
             modifier = Modifier.padding(horizontal = 20.dp)
         )
 
@@ -193,7 +191,7 @@ fun DepositScreen(onBack: () -> Unit) {
 
         // ── Resumen ───────────────────────────────────────────────────────────
         Text(
-            text = "Resumen",
+            text = "Resumen de retiro",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary,
@@ -213,9 +211,9 @@ fun DepositScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 ResumenRow(label = "Moneda", value = "$selectedCurrency (${currencies.first { it.first == selectedCurrency }.second})")
                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF0F0F0))
-                ResumenRow(label = "Monto a recargar", value = "$symbol ${"%.2f".format(montoDouble)}")
+                ResumenRow(label = "Monto a retirar", value = "$symbol ${"%.2f".format(montoDouble)}")
                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF0F0F0))
-                ResumenRow(label = "Saldo disponible después ⓘ", value = "$symbol ${"%.2f".format(saldoFinal)}")
+                ResumenRow(label = "Saldo restante", value = "$symbol ${"%.2f".format(saldoFinal)}")
             }
         }
 
@@ -223,16 +221,16 @@ fun DepositScreen(onBack: () -> Unit) {
 
         // ── Confirmar ─────────────────────────────────────────────────────────
         P2PButton(
-            text = "Confirmar recarga",
+            text = "Confirmar retiro",
             modifier = Modifier.padding(horizontal = 20.dp)
         ) {
             val amount = monto.toDoubleOrNull()
             when {
                 amount == null || amount <= 0 -> errorMonto = "Ingresa un monto válido"
-                amount < 10                   -> errorMonto = "Mínimo $symbol 10.00"
-                amount > 30000                -> errorMonto = "Máximo $symbol 30,000.00"
+                amount > balance             -> errorMonto = "Saldo insuficiente"
                 else -> {
-                    GlobalWalletState.addDeposit(selectedCurrency, amount)
+                    // Logic to withdraw
+                    GlobalWalletState.addDeposit(selectedCurrency, -amount)
                     onBack()
                 }
             }
@@ -248,16 +246,5 @@ fun DepositScreen(onBack: () -> Unit) {
                 .align(Alignment.CenterHorizontally)
                 .clickable { onBack() }
         )
-    }
-}
-
-@Composable
-fun ResumenRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, fontSize = 14.sp, color = Color(0xFF444444), modifier = Modifier.weight(1f))
-        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
     }
 }
