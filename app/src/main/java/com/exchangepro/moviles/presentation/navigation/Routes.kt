@@ -13,4 +13,9 @@ sealed class Route(val value: String) {
     data object Disputes : Route("disputes")
     data object Profile : Route("profile")
     data object Notifications : Route("notifications")
+    data object AdminDashboard : Route("admin_dashboard")
+    data object AdminDisputes : Route("admin_disputes")
+    data object AdminFeedback : Route("admin_feedback")
+    data object AdminReports : Route("admin_reports")
+    data object AdminNotifications : Route("admin_notifications")
 }

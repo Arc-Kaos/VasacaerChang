@@ -4,7 +4,7 @@ enum class UserRole { USER, ADMIN }
 enum class OperationType { COMPRA, VENTA }
 enum class OfferStatus { ACTIVA, PAUSADA, COMPLETADA, CANCELADA }
 enum class TransactionStatus { PENDIENTE_PAGO, PAGADO, COMPLETADO, CANCELADO, EN_DISPUTA }
-enum class CurrencyCode { PEN, USD }
+enum class CurrencyCode { PEN, USD, EUR, JPY, GBP }
 
 data class AppUser(
     val id: String,
@@ -27,6 +27,48 @@ data class WalletBalance(
 data class Wallet(
     val userId: String,
     val balances: List<WalletBalance>
+)
+
+data class DepositAccount(
+    val key: String,
+    val method: String,
+    val detail: String,
+    val extra: String? = null
+)
+
+data class WalletMovement(
+    val id: String,
+    val currency: CurrencyCode,
+    val amount: Double,
+    val operationType: String,
+    val result: String,
+    val referenceType: String? = null,
+    val referenceId: String? = null,
+    val createdAtMillis: Long? = null
+)
+
+data class TopUpRequest(
+    val currency: CurrencyCode,
+    val amount: Double,
+    val paymentMethod: String,
+    val referenceNumber: String
+)
+
+data class ExchangeRate(
+    val code: CurrencyCode,
+    val mid: Double,
+    val buy: Double,
+    val sell: Double,
+    val direction: String
+)
+
+data class CreateOfferRequest(
+    val operationType: OperationType,
+    val fromCurrency: CurrencyCode,
+    val toCurrency: CurrencyCode,
+    val exchangeRate: Double,
+    val offeredAmount: Double,
+    val minimumAmount: Double
 )
 
 data class Offer(

@@ -4,6 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.exchangepro.moviles.presentation.admin.AdminDashboardScreen
+import com.exchangepro.moviles.presentation.admin.AdminDisputesScreen
+import com.exchangepro.moviles.presentation.admin.AdminFeedbackScreen
+import com.exchangepro.moviles.presentation.admin.AdminNotificationsScreen
+import com.exchangepro.moviles.presentation.admin.AdminReportsScreen
 import com.exchangepro.moviles.presentation.auth.LoginScreen
 import com.exchangepro.moviles.presentation.auth.RegisterScreen
 import com.exchangepro.moviles.presentation.disputes.DisputesScreen
@@ -31,10 +36,10 @@ fun ExchangeProNavGraph() {
             ExchangeScaffold(navController, "Ofertas") { OffersScreen(navController) }
         }
         composable(Route.CreateOffer.value) {
-            ExchangeScaffold(navController, "Crear oferta") { CreateOfferScreen() }
+            ExchangeScaffold(navController, "Crear oferta") { CreateOfferScreen(navController) }
         }
         composable(Route.MyOffers.value) {
-            ExchangeScaffold(navController, "Mis ofertas") { MyOffersScreen() }
+            ExchangeScaffold(navController, "Mis ofertas") { MyOffersScreen(navController) }
         }
         composable(Route.Wallet.value) {
             ExchangeScaffold(navController, "Wallet") { WalletScreen() }
@@ -53,6 +58,21 @@ fun ExchangeProNavGraph() {
         }
         composable(Route.Notifications.value) {
             ExchangeScaffold(navController, "Notificaciones") { NotificationsScreen() }
+        }
+        composable(Route.AdminDashboard.value) {
+            ExchangeScaffold(navController, "Dashboard", isAdmin = true) { AdminDashboardScreen(navController) }
+        }
+        composable(Route.AdminDisputes.value) {
+            ExchangeScaffold(navController, "Disputas", isAdmin = true) { AdminDisputesScreen() }
+        }
+        composable(Route.AdminFeedback.value) {
+            ExchangeScaffold(navController, "Feedback", isAdmin = true) { AdminFeedbackScreen() }
+        }
+        composable(Route.AdminReports.value) {
+            ExchangeScaffold(navController, "Reportes", isAdmin = true) { AdminReportsScreen() }
+        }
+        composable(Route.AdminNotifications.value) {
+            ExchangeScaffold(navController, "Notificaciones", isAdmin = true) { AdminNotificationsScreen() }
         }
     }
 }
