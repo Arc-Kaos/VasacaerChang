@@ -10,6 +10,8 @@ object FirebaseCollections {
     const val RATINGS = "ratings"
     const val NOTIFICATIONS = "notifications"
     const val WALLET_MOVEMENTS = "walletMovements"
+    const val TOP_UPS = "topUps"
+    const val BALANCES = "balances"
 }
 
 object FirebaseStoragePaths {
