@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Nexus Pay"
+rootProject.name = "MOVILES_PRO"
 include(":app")
